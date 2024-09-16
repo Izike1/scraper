@@ -59,43 +59,75 @@ try:
         start_value = 2
         end_value = 4
         current_value = start_value
+        visited_urls = set()
 
         while current_value <= end_value:
             tail = f'#1X2;{current_value}'
             coef_url = game + tail
+
+            if coef_url in visited_urls:
+                print(f"Страница {coef_url} уже обработана, пропускаем.")
+                current_value += 1
+                continue
+
+            print(f"Переход на страницу: {coef_url}")
             driver.get(coef_url)
+            visited_urls.add(coef_url)
+
+            driver.refresh()
+            time.sleep(2)  
+
+            try:
+                WebDriverWait(driver, 15).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "p[class^='height-content max-mm:hidden pl-4']"))
+                )
+                print(f"Элементы на странице {current_value} загружены.")
+            except Exception as e:
+                print(f"Ошибка загрузки страницы {coef_url}: {e}")
+                current_value += 1
+                continue
+
             driver.execute_script("window.scrollTo(0, 1000);")
-            time.sleep(2)
+            time.sleep(4)  
 
             sportsbook = driver.find_elements(By.CSS_SELECTOR, "p[class^='height-content max-mm:hidden pl-4']")
-            pin_num = None
-            for row, el in enumerate(sportsbook):
-                if el.text == "Pinnacle":
-                    pin_num = row
-                    break
 
-            if pin_num is not None:
-
-                for _ in range(2):
-                    coef = sportsbook[pin_num + 1]
+            if not sportsbook:
+                print(f"Коэффициенты на странице {current_value} не найдены.")
+            else:
+                try:
+                    coef = sportsbook[0]
                     actions = ActionChains(driver)
                     actions.move_to_element(coef).perform()
-                    time.sleep(3)
+                    time.sleep(2)
 
                     all_odds = driver.find_elements(By.CSS_SELECTOR, "div[class^='flex flex-row items-center gap-[3px]']")
-                    for odd in all_odds:
-                        odds_text = odd.text
-                        coef_list.append(odds_text)
-                    
-                    time.sleep(3)
-            current_value += 1
-            time.sleep(2)
+                    if not all_odds:
+                        print(f"Коэффициенты на странице {current_value} не найдены.")
+                    else:
+                        for odd in all_odds:
+                            odds_text = odd.text
+                            if odds_text:
+                                coef_list.append(odds_text)
+                        print(f"Коэффициенты на странице {current_value} собраны: {coef_list}")
+                except Exception as e:
+                    print(f"Ошибка при сборе коэффициентов на странице {current_value}: {e}")
+
             next_page = driver.find_elements(By.CSS_SELECTOR, ".flex.gap-1.py-2.text-xs.tab-wrapper div")
             if next_page:
                 next_page_list = list(next_page)
-                if len(next_page_list) > current_value - 2:
+                if current_value - start_value < len(next_page_list):
+                    next_page_button = next_page_list[current_value - start_value]
                     actions = ActionChains(driver)
-                    actions.click(next_page_list[current_value - 2]).perform()
+                    actions.click(next_page_button).perform()
+                    print(f"Переход на следующую страницу {current_value + 1}.")
+                    time.sleep(4)
+                else:
+                    print(f"Нет доступных страниц для current_value={current_value}")
+            else:
+                print(f"Навигационные кнопки для перехода на страницу {current_value + 1} не найдены.")
+
+            current_value += 1
             time.sleep(2)
         
         print('Дата:', game_date)
@@ -104,7 +136,6 @@ try:
         print('Счёт:', full_time)
         print('Коэффициенты:', coef_list)
 
-        # Добавление данных
         game_data.append(
             (game_date, game_time, home, away, full_time, game, *coef_list)
         )
