@@ -13,6 +13,7 @@ service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
+    # Основная ссылка
     driver.get('https://www.oddsportal.com/football/england/premier-league/results/')
     time.sleep(4)
 
@@ -23,7 +24,7 @@ try:
     for _ in range(2):
         driver.execute_script("window.scrollBy(0, -1000);")  
         time.sleep(2)  
-
+    # Также меняем href
     games = driver.find_elements(By.CSS_SELECTOR, "a[href*='/football/england/premier-league/']")
     if not games:
         raise Exception("Ссылки на игры не найдены, возможно, контент не подгружен.")
@@ -31,6 +32,7 @@ try:
     games_set = set([el.get_attribute('href') for el in games])
 
     game_data = []
+    # Если нужны не все игры, то добавляем [:1] к for, например for game in list(games_set)[:1]:, 1 это количество игр, то бишь можно 2,3,4 и тд. 
     for game in list(games_set):
         url = game + '#1X2;2;'
         driver.get(url)
@@ -146,7 +148,12 @@ try:
     ws.append(["Дата", "Время", "Домашняя команда", "Гостевая команда", "Результат", "Ссылка на игру", "Коэффициенты"])
     for data in game_data:
         ws.append(data)
-    wb.save("game_data.xlsx")
+
+    safe_url = re.sub(r'[\/:*?"<>|]', '_', url)
+    file_name = f"game_data_{safe_url}.xlsx"
+
+    wb.save(file_name)
 
 finally:
+    driver.quit()
     print('ok')
