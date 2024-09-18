@@ -66,8 +66,8 @@ try:
         visited_urls = set()
 
         while current_value <= end_value:
-            over_under_value_start = 0.25
-            over_under_value_end = 8.5
+            over_under_value_start = 0.50
+            over_under_value_end = 8.50
             current_over_under_value = over_under_value_start
 
             while current_over_under_value <= over_under_value_end:
@@ -82,6 +82,7 @@ try:
                     continue
 
                 print(f"Переход на страницу: {coef_url}")
+
                 driver.get(coef_url)
                 visited_urls.add(coef_url)
 
@@ -139,7 +140,7 @@ try:
                             print(f"Коэффициенты на странице {current_value} собраны: {coef_list}")
                     except Exception as e:
                         print(f"Ошибка при сборе коэффициентов на странице {current_value}: {e}")
-                
+
                 current_over_under_value += 0.25
                 time.sleep(2)
 
