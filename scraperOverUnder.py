@@ -13,6 +13,10 @@ options = webdriver.ChromeOptions()
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.append(["Дата", "Время", "Домашняя команда", "Гостевая команда", "Результат", "Ссылка на игру", "Коэффициенты"])
+
 try:
     # Основная ссылка
     driver.get('https://www.oddsportal.com/football/england/premier-league/results/')
@@ -35,7 +39,7 @@ try:
 
     game_data = []
     # Если нужны не все игры, то добавляем [:1] к for, например for game in list(games_set)[:1]:, 1 это количество игр, то бишь можно 2,3,4 и тд. 
-    for game in list(games_set)[:1]:
+    for game in list(games_set)[:3]:
         url = game + '#over-under;2'
         driver.get(url)
         time.sleep(2)
@@ -172,17 +176,11 @@ try:
             (game_date, game_time, home, away, full_time, game, *coef_list)
         )
 
-    # Excel
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.append(["Дата", "Время", "Домашняя команда", "Гостевая команда", "Результат", "Ссылка на игру", "Коэффициенты"])
-    for data in game_data:
-        ws.append(data)
-
-    safe_url = re.sub(r'[\/:*?"<>|]', '_', url)
-    file_name = f"game_data_{safe_url}.xlsx"
-
-    wb.save(file_name)
+        for data in game_data:
+            ws.append(data)
+        safe_url = re.sub(r'[\/:*?"<>|]', '_', url)
+        file_name = f"game_data_{safe_url}.xlsx"
+        wb.save(file_name)
 
 finally:
     driver.quit()
