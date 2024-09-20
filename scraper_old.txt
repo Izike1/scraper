@@ -2,7 +2,6 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-import os
 import time
 import re
 from selenium.webdriver.common.action_chains import ActionChains
@@ -14,19 +13,9 @@ options = webdriver.ChromeOptions()
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
-# Имя Excel файла
-file_name = "game_data.xlsx"
-
-# Функция для создания или открытия существующего Excel файла
-def open_or_create_excel(file_name):
-    if os.path.exists(file_name):
-        wb = openpyxl.load_workbook(file_name)
-        ws = wb.active
-    else:
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.append(["Дата", "Время", "Домашняя команда", "Гостевая команда", "Результат", "Ссылка на игру", "Коэффициенты"])
-    return wb, ws
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.append(["Дата", "Время", "Домашняя команда", "Гостевая команда", "Результат", "Ссылка на игру", "Коэффициенты"])
 
 try:
     # Основная ссылка
@@ -50,7 +39,7 @@ try:
 
     game_data = []
     # Если нужны не все игры, то добавляем [:1] к for, например for game in list(games_set)[:1]:, 1 это количество игр, то бишь можно 2,3,4 и тд. 
-    for game in list(games_set)[:2]:
+    for game in list(games_set)[:3]:
         url = game + '#over-under;2'
         driver.get(url)
         time.sleep(2)
@@ -187,11 +176,11 @@ try:
             (game_date, game_time, home, away, full_time, game, *coef_list)
         )
 
-        wb, ws = open_or_create_excel(file_name)
-        ws.append([game_date, game_time, home, away, full_time, game, *coef_list])
-
+        for data in game_data:
+            ws.append(data)
+        safe_url = re.sub(r'[\/:*?"<>|]', '_', url)
+        file_name = f"game_data_{safe_url}.xlsx"
         wb.save(file_name)
-        print(f"Данные по игре сохранены: {game}")
 
 finally:
     driver.quit()
