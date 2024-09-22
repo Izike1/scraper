@@ -2,6 +2,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+import re
 import time
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,7 +34,7 @@ try:
 
     game_data = []
     # Если нужны не все игры, то добавляем [:1] к for, например for game in list(games_set)[:1]:, 1 это количество игр, то бишь можно 2,3,4 и тд. 
-    for game in list(games_set):
+    for game in list(games_set)[:1]:
         url = game + '#1X2;2;'
         driver.get(url)
         time.sleep(2)
